@@ -1,0 +1,69 @@
+﻿@model IEnumerable<ITAssetManager.Web.Models.Asset>
+@{
+    ViewData["Title"] = "Warranty Expiring Report";
+}
+
+<h1>Assets with Expiring Warranties</h1>
+
+<p class="text-muted">Showing assets with warranties expiring in the next 90 days.</p>
+
+@if (Model != null && Model.Any())
+{
+    <div class="alert alert-warning">
+        <strong>@Model.Count()</strong> assets found with warranties expiring soon.
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Asset Tag</th>
+                <th>Name</th>
+                <th>Warranty Expiry</th>
+                <th>Days Remaining</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@(item.AssetTag ?? "N/A")</td>
+                    <td>@(item.Name ?? "N/A")</td>
+                    <td>
+                        @if (item.WarrantyExpiry != null)
+                        {
+                            @item.WarrantyExpiry.Value.ToString("yyyy-MM-dd")
+                        }
+                        else
+                        {
+                            <span class="text-muted">N/A</span>
+                        }
+                    </td>
+                    <td>
+                        @if (item.WarrantyExpiry != null)
+                        {
+                            var daysRemaining = (item.WarrantyExpiry.Value - DateTime.Today).Days;
+                            <span class="@(daysRemaining <= 30 ? "text-danger" : daysRemaining <= 60 ? "text-warning" : "text-info")">
+                                @daysRemaining days
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">N/A</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-info">
+        <h5>No Data Available</h5>
+        <p class="mb-0">No assets found with warranties expiring in the next 90 days, or no assets in database yet.</p>
+    </div>
+}
+
+<div class="mt-3">
+    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Back to Home</a>
+</div>

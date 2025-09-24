@@ -1,0 +1,107 @@
+﻿@model ITAssetManager.Web.Models.ViewModels.AssetCreateViewModel
+@{
+    ViewData["Title"] = "Create Asset";
+}
+
+<div class="container my-4">
+    <div class="card p-4">
+        <h2 class="mb-3">Create New Asset</h2>
+
+        <form asp-action="Create">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="AssetTag" class="form-label"></label>
+                    <input asp-for="AssetTag" class="form-control" />
+                    <span asp-validation-for="AssetTag" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Category" class="form-label"></label>
+                    <input asp-for="Category" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Model" class="form-label"></label>
+                    <input asp-for="Model" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="SerialNumber" class="form-label"></label>
+                    <input asp-for="SerialNumber" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="PurchaseDate" class="form-label"></label>
+                    <input asp-for="PurchaseDate" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PurchaseCost" class="form-label"></label>
+                    <input asp-for="PurchaseCost" class="form-control" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="WarrantyEnd" class="form-label"></label>
+                    <input asp-for="WarrantyEnd" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Status" class="form-label"></label>
+                    <input asp-for="Status" class="form-control" />
+                </div>
+
+                <!-- ============== Person (choose existing OR add new) ============== -->
+                <div class="col-12">
+                    <h5 class="mt-3 mb-2">Assigned To</h5>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Choose existing person</label>
+                    <select asp-for="AssignedToPersonId" class="form-select" asp-items="ViewBag.PersonId">
+                        <option value="">-- Unassigned --</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Or add new person</label>
+                    <div class="row g-2">
+                        <div class="col-md-7">
+                            <input asp-for="NewPersonName" class="form-control" placeholder="Full name" />
+                        </div>
+                        <div class="col-md-5">
+                            <input asp-for="NewPersonEmail" class="form-control" placeholder="email (optional)" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============== Location (choose existing OR add new) ============== -->
+                <div class="col-12">
+                    <h5 class="mt-3 mb-2">Location</h5>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Choose existing location</label>
+                    <select asp-for="LocationId" class="form-select" asp-items="ViewBag.LocationId">
+                        <option value="">-- None --</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Or add new location</label>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <input asp-for="NewLocationBuilding" class="form-control" placeholder="Building" />
+                        </div>
+                        <div class="col-md-4">
+                            <input asp-for="NewLocationRoom" class="form-control" placeholder="Room" />
+                        </div>
+                        <div class="col-md-4">
+                            <input asp-for="NewLocationLabNumber" class="form-control" placeholder="Lab #" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-create">+ Create Device</button>
+                <a asp-action="Index" class="btn btn-outline-primary ms-2">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

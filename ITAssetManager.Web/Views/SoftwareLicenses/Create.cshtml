@@ -1,0 +1,57 @@
+﻿@model ITAssetManager.Web.Models.SoftwareLicense
+@{
+    ViewData["Title"] = "Create Software License";
+}
+
+<h2>Create Software License</h2>
+
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="form-group mb-3">
+        <label asp-for="SoftwareProductId" class="form-label">Software Product</label>
+        <select asp-for="SoftwareProductId" class="form-select" asp-items="ViewBag.SoftwareProductId">
+            <option value="">-- Select Software Product --</option>
+        </select>
+        <span asp-validation-for="SoftwareProductId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="LicenseKey" class="form-label">License Key</label>
+        <input asp-for="LicenseKey" class="form-control" />
+        <span asp-validation-for="LicenseKey" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="PurchaseDate" class="form-label">Purchase Date</label>
+        <input asp-for="PurchaseDate" class="form-control" type="date" />
+        <span asp-validation-for="PurchaseDate" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="ExpiryDate" class="form-label">Expiry Date</label>
+        <input asp-for="ExpiryDate" class="form-control" type="date" />
+        <span asp-validation-for="ExpiryDate" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="SeatsPurchased" class="form-label">Seats Purchased</label>
+        <input asp-for="SeatsPurchased" class="form-control" type="number" />
+        <span asp-validation-for="SeatsPurchased" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Cost" class="form-label">Cost</label>
+        <input asp-for="Cost" class="form-control" type="number" step="0.01" />
+        <span asp-validation-for="Cost" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <button type="submit" class="btn btn-primary">Create</button>
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

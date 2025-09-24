@@ -1,0 +1,79 @@
+﻿@model IEnumerable<ITAssetManager.Web.Models.SoftwareLicense>
+@{
+    ViewData["Title"] = "Software Licenses";
+}
+
+<h1>Software Licenses</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New License</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Software Product</th>
+            <th>License Key</th>
+            <th>Purchase Date</th>
+            <th>Expiry Date</th>
+            <th>Seats Purchased</th>
+            <th>Seats Assigned</th>
+            <th>Cost</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@(item.Product?.Name ?? "N/A")</td>
+                <td>
+                    @if (!string.IsNullOrEmpty(item.LicenseKey))
+                    {
+                        <span class="font-monospace">@item.LicenseKey</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">N/A</span>
+                    }
+                </td>
+                <td>@(item.PurchaseDate?.ToString("yyyy-MM-dd") ?? "N/A")</td>
+                <td>
+                    @if (item.ExpiryDate.HasValue)
+                    {
+                        <span class="@(item.IsExpired ? "text-danger" : item.IsExpiringSoon ? "text-warning" : "text-success")">
+                            @item.ExpiryDate.Value.ToString("yyyy-MM-dd")
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">N/A</span>
+                    }
+                </td>
+                <td>@(item.SeatsPurchased?.ToString() ?? "N/A")</td>
+                <td>@(item.SeatsAssigned?.ToString() ?? "0")</td>
+                <td>@(item.Cost?.ToString("C") ?? "N/A")</td>
+                <td>
+                    @if (item.IsExpired)
+                    {
+                        <span class="badge bg-danger">Expired</span>
+                    }
+                    else if (item.IsExpiringSoon)
+                    {
+                        <span class="badge bg-warning">Expiring Soon</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Active</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info">Details</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

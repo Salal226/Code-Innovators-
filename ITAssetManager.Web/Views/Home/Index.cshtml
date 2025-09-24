@@ -1,0 +1,56 @@
+﻿@model ITAssetManager.Web.Models.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="mb-4 text-center">
+    <img src="~/img/logo-code-innovators2.png" alt="Code Innovators" style="height:150px;width:auto" />
+    <h1 class="display-6 mt-3">Welcome to IT Asset Manager</h1>
+    <p class="lead">Track hardware, software, licenses, and warranties in one place.</p>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card p-3 shadow-sm">
+            <div class="text-muted">Total Assets</div>
+            <div class="h3">@Model.TotalAssets</div>
+            <a asp-controller="Assets" asp-action="Index" class="stretched-link">View assets</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 shadow-sm">
+            <div class="text-muted">In Repair</div>
+            <div class="h3">@Model.InRepair</div>
+            <a asp-controller="Assets" asp-action="Index" class="stretched-link">Go to assets</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 shadow-sm">
+            <div class="text-muted">Warranty ≤ 30 days</div>
+            <div class="h3">@Model.ExpiringWarranty30</div>
+            <a asp-controller="Reports" asp-action="WarrantyExpiring" class="stretched-link">See report</a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-1">
+    <div class="col-md-4">
+        <div class="card p-3 shadow-sm">
+            <div class="text-muted">Software Products</div>
+            <div class="h3">@Model.SoftwareProducts</div>
+            <a asp-controller="SoftwareProducts" asp-action="Index" class="stretched-link">View software</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 shadow-sm">
+            <div class="text-muted">License Seats (Total)</div>
+            <div class="h3">@Model.LicensesTotalSeats</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 shadow-sm">
+            <div class="text-muted">Seats In Use</div>
+            <div class="h3">@Model.LicensesSeatsInUse</div>
+        </div>
+    </div>
+</div>

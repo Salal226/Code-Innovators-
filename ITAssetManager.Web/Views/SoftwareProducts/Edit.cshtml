@@ -1,0 +1,108 @@
+﻿@model ITAssetManager.Web.Models.SoftwareProduct
+@{
+    ViewData["Title"] = "Edit Software Product";
+}
+
+<h2>Edit Software Product</h2>
+
+<form asp-action="Edit" method="post" class="row g-3">
+    <input type="hidden" asp-for="Id" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="col-md-6">
+        <label asp-for="Name" class="form-label">Product Name *</label>
+        <input asp-for="Name" class="form-control" required />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="Vendor" class="form-label">Vendor</label>
+        <input asp-for="Vendor" class="form-control" />
+        <span asp-validation-for="Vendor" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="Version" class="form-label">Version</label>
+        <input asp-for="Version" class="form-control" />
+        <span asp-validation-for="Version" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="Publisher" class="form-label">Publisher</label>
+        <input asp-for="Publisher" class="form-control" />
+        <span asp-validation-for="Publisher" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="Category" class="form-label">Category</label>
+        <input asp-for="Category" class="form-control" />
+        <span asp-validation-for="Category" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="UnitCost" class="form-label">Unit Cost</label>
+        <input asp-for="UnitCost" class="form-control" type="number" step="0.01" />
+        <span asp-validation-for="UnitCost" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="SeatCount" class="form-label">Total Seats</label>
+        <input asp-for="SeatCount" class="form-control" type="number" min="0" />
+        <span asp-validation-for="SeatCount" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="SeatsPurchased" class="form-label">Seats Purchased</label>
+        <input asp-for="SeatsPurchased" class="form-control" type="number" min="0" />
+        <span asp-validation-for="SeatsPurchased" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="SeatsAssigned" class="form-label">Seats Assigned</label>
+        <input asp-for="SeatsAssigned" class="form-control" type="number" min="0" readonly />
+        <div class="form-text">Calculated from active assignments.</div>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="SeatsInUse" class="form-label">Seats In Use</label>
+        <input asp-for="SeatsInUse" class="form-control" type="number" min="0" readonly />
+        <div class="form-text">Calculated from active assignments.</div>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="LicenseKey" class="form-label">License Key</label>
+        <input asp-for="LicenseKey" class="form-control" />
+        <span asp-validation-for="LicenseKey" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="PurchaseDate" class="form-label">Purchase Date</label>
+        <input asp-for="PurchaseDate" class="form-control" type="date" />
+        <span asp-validation-for="PurchaseDate" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="LicenseExpiry" class="form-label">License Expiry</label>
+        <input asp-for="LicenseExpiry" class="form-control" type="date" />
+        <span asp-validation-for="LicenseExpiry" class="text-danger"></span>
+    </div>
+
+    @if (Model.Assignments?.Any() == true)
+    {
+        <div class="col-12">
+            <div class="alert alert-info">
+                <strong>Current Usage:</strong> @Model.SeatsInUse of @Model.SeatCount seats in use across @Model.Assignments.Count() assignments.
+            </div>
+        </div>
+    }
+
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-info">View Details</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

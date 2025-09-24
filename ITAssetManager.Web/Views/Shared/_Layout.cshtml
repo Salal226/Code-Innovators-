@@ -1,0 +1,90 @@
+﻿@*
+  Views/Shared/_Layout.cshtml
+*@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - IT Asset Manager</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site-brand.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/ITAssetManager.Web.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-dark border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
+                    <img src="~/img/logo-code-innovators.png" asp-append-version="true"
+                         alt="Code Innovators Logo" style="height:32px;width:auto;margin-right:.5rem;">
+                    <span>Code Innovators · IT Asset Manager</span>
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                        data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Assets" asp-action="Index">Assets</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="People" asp-action="Index">People</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Locations" asp-action="Index">Locations</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="SoftwareProducts" asp-action="Index">Software</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="SoftwareLicenses" asp-action="Index">Licenses</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top py-3 mt-4" style="background:#fff;">
+        <div class="container d-flex justify-content-between small">
+            <span>© @DateTime.Now.Year Code Innovators</span>
+            <span>Built by CPA Team — Allison Daniel, Salal Al-Salami, Kazi Nafiur Rashid Alvi,
+                Evan Arnold, Sabin Baral, Bipin Basnet, Shanita Boonratanayothin, Nishan Chokhal, Giriraj Dahal
+            </span>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
+    <script>
+        $(function () {
+          const t = '@TempData["ToastType"]', m = '@TempData["ToastMessage"]';
+          if (m) { toastr.options.timeOut = 2500; toastr[t||"success"](m); }
+        });
+    </script>
+
+</body>
+</html>

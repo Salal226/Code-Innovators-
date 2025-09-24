@@ -1,0 +1,50 @@
+﻿@model IEnumerable<ITAssetManager.Web.Models.Asset>
+@{
+    ViewData["Title"] = "Assets";
+}
+
+<h1>Assets</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Asset</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Asset Tag</th>
+            <th>Category</th>
+            <th>Model</th>
+            <th>Serial Number</th>
+            <th>Purchase Date</th>
+            <th>Purchase Cost</th>
+            <th>Warranty End</th>
+            <th>Status</th>
+            <th>Location</th>
+            <th>Assigned To</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@(item.AssetTag ?? "N/A")</td>
+                <td>@(item.Category ?? "N/A")</td>
+                <td>@(item.Model ?? "N/A")</td>
+                <td>@(item.SerialNumber ?? "N/A")</td>
+                <td>@(item.PurchaseDate?.ToString("yyyy-MM-dd") ?? "N/A")</td>
+                <td>@(item.PurchaseCost?.ToString("C") ?? "N/A")</td>
+               @*  <td>@(item.WarrantyEnd?.ToString("yyyy-MM-dd") ?? "N/A")</td> *@
+                <td>@(item.Status ?? "N/A")</td>
+                <td>@(item.Location != null ? $"{item.Location.Building} - {item.Location.Room}" : "N/A")</td>
+                <td>@(item.AssignedToPerson?.FullName ?? "Unassigned")</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info">Details</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
