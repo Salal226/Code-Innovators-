@@ -26,15 +26,22 @@ namespace ITAssetManager.Web.Data
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false)
-                // .AddJsonFile("appsettings.Development.json", optional: true) // uncomment if you want
+                .AddJsonFile("appsettings.Development.json", optional: true) // uncomment if you want
                 .AddEnvironmentVariables()
                 .Build();
 
             var cs = config.GetConnectionString("DefaultConnection")
-                     ?? "Server=localhost;Port=3306;Database=it_asset_manager;User Id=root;Password=YOUR_PASSWORD;TreatTinyAsBoolean=true;";
+                     ?? "Server=(localdb)\\MSSQLLocalDB;Database=ITAssetManager;Trusted_Connection=true;MultipleActiveResultSets=true";
 
             var options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseMySql(cs, ServerVersion.AutoDetect(cs))
+                .UseSqlServer(cs, sqlServerOptions =>
+                {
+                    // Enable retry on failure for SQL Server
+                    sqlServerOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(30),
+                        errorNumbersToAdd: null);
+                })
                 .Options;
 
             return new AppDbContext(options);
@@ -57,8 +64,6 @@ namespace ITAssetManager.Web.Data
         public DbSet<MaintenanceTicket> MaintenanceTickets => Set<MaintenanceTicket>();
         public DbSet<ChangeLog> ChangeLogs => Set<ChangeLog>();
 
-        //public object SoftwareLicenses { get; internal set; }
-
         protected override void OnModelCreating(ModelBuilder b)
         {
             base.OnModelCreating(b);
@@ -77,13 +82,38 @@ namespace ITAssetManager.Web.Data
                 .WithMany(s => s.Assignments)
                 .HasForeignKey(x => x.SoftwareProductId);
 
-            b.Entity<LicenseAssignment>().HasOne(x => x.Asset).WithMany(a => a.LicenseAssignments).HasForeignKey(x => x.AssetId);
-            b.Entity<LicenseAssignment>().HasOne(x => x.Person).WithMany().HasForeignKey(x => x.PersonId);
+            b.Entity<LicenseAssignment>()
+                .HasOne(x => x.Asset)
+                .WithMany(a => a.LicenseAssignments)
+                .HasForeignKey(x => x.AssetId);
+
+            b.Entity<LicenseAssignment>()
+                .HasOne(x => x.Person)
+                .WithMany()
+                .HasForeignKey(x => x.PersonId);
 
             b.Entity<MaintenanceTicket>()
                 .HasOne(t => t.Asset)
                 .WithMany(a => a.Tickets)
                 .HasForeignKey(t => t.AssetId);
+
+            // SQL Server specific configurations (optional)
+            b.Entity<ChangeLog>()
+                .Property(c => c.At)
+                .HasDefaultValueSql("GETUTCDATE()"); // SQL Server function for UTC timestamp
+
+            // Indexes for better performance (optional but recommended)
+            b.Entity<Asset>()
+                .HasIndex(a => a.SerialNumber)
+                .IsUnique();
+
+            b.Entity<SoftwareProduct>()
+                .HasIndex(s => new { s.Name, s.Version })
+                .IsUnique();
+
+            b.Entity<LicenseAssignment>()
+                .HasIndex(la => new { la.SoftwareProductId, la.AssetId })
+                .IsUnique();
         }
 
         /// <summary>

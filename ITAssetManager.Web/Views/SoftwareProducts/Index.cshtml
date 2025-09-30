@@ -1,5 +1,10 @@
 ﻿@model IEnumerable<ITAssetManager.Web.Models.ViewModels.SoftwareProductListVm>
 
+<!-- Move the "New Product" button above the table -->
+<div class="mb-3">
+    <a asp-action="Create" class="btn btn-success btn-sm">+ New Product</a>
+</div>
+
 <table class="table">
     <thead>
         <tr>
@@ -10,7 +15,7 @@
             <th>Total Seats</th>
             <th>In Use</th>          @* was SeatsInUse *@
             <th>Next Expiry</th>
-            <th></th>
+            <th>Actions</th>         @* Added header for action buttons *@
         </tr>
     </thead>
     <tbody>
@@ -24,10 +29,6 @@
                 <td>@item.TotalSeats</td>
                 <td>@item.InUse</td>
                 <td>@(item.NextExpiry.HasValue? item.NextExpiry.Value.ToString("yyyy-MM-dd") : "-")</td>
-                <div class="mb-3">
-                    <a asp-action="Create" class="btn btn-success btn-sm">+ New Product</a>
-                </div>
-
                 <td>
                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Details</a>
                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Edit</a>
