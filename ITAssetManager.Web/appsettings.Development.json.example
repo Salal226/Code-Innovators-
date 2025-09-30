@@ -1,0 +1,5 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=ITAssetManager;Trusted_Connection=True;MultipleActiveResultSets=true"
+  }
+}
