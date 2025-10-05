@@ -45,5 +45,29 @@ namespace ITAssetManager.Web.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
             => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> TestBackup()
+        {
+            try
+            {
+                var backupService = HttpContext.RequestServices.GetRequiredService<IBackupService>();
+                var result = await backupService.CreateDatabaseBackupAsync();
+        
+                if (result)
+                {
+                    var backupFiles = await backupService.GetBackupFilesAsync();
+                    return Content($" Backup created successfully! Found {backupFiles.Count} backup files.");
+                }
+                else
+                {
+                    return Content(" Backup failed!");
+                }
+            }
+            catch (Exception ex)
+            {
+                return Content($" Error: {ex.Message}");
+            }
+        }
     }
 }
