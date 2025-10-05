@@ -75,6 +75,8 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 // If you scaffolded Identity UI
 builder.Services.AddRazorPages();
 
+builder.Services.AddScoped<IBackupService, SqlBackupService>();
+
 var app = builder.Build();
 
 // -------------------------------------------------------
