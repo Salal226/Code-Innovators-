@@ -2,6 +2,8 @@ using System.Diagnostics;
 using ITAssetManager.Web.Data;
 using ITAssetManager.Web.Models;
 using ITAssetManager.Web.Models.ViewModels;
+using ITAssetManager.Web.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
