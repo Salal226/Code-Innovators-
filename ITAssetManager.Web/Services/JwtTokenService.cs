@@ -96,6 +96,22 @@ namespace ITAssetManager.Web.Services
         }
 
         /// <summary>
+        /// Validates user credentials and returns the user if authentication succeeds
+        /// </summary>
+        /// <param name="email">The user's email address</param>
+        /// <param name="password">The user's password</param>
+        /// <returns>IdentityUser object if credentials are valid, null if authentication fails</returns>
+        public async Task<IdentityUser> ValidateUserAsync(string email, string password)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user != null && await _userManager.CheckPasswordAsync(user, password))
+            {
+                return user;
+            }
+            return null;
+        }
+        
+        /// <summary>
         /// Validates a JWT token and returns the claims principal if valid
         /// </summary>
         public ClaimsPrincipal? ValidateToken(string token)
