@@ -28,32 +28,56 @@
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Assets" asp-action="Index">Assets</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="People" asp-action="Index">People</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Locations" asp-action="Index">Locations</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="SoftwareProducts" asp-action="Index">Software</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="SoftwareLicenses" asp-action="Index">Licenses</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Backup" asp-action="Index">Backups</a>
-                        </li>
+                        @if (User.Identity?.IsAuthenticated ?? false)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Assets" asp-action="Index">Assets</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="People" asp-action="Index">People</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Locations" asp-action="Index">Locations</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="SoftwareProducts" asp-action="Index">Software</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="SoftwareLicenses" asp-action="Index">Licenses</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Backup" asp-action="Index">Backups</a>
+                            </li>
+                        }
+                    </ul>
+
+                    <ul class="navbar-nav ms-auto">
+                        @if (User.Identity?.IsAuthenticated ?? false)
+                        {
+                            <li class="nav-item">
+                                <span class="nav-link text-light">Hello, @User.Identity.Name!</span>
+                            </li>
+                            <li class="nav-item">
+                                <form method="post" asp-area="Identity" asp-page="/Account/Logout" class="form-inline">
+                                    <button type="submit" class="btn btn-link nav-link text-light">Logout</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-area="Identity" asp-page="/Account/Login">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-light" asp-area="Identity" asp-page="/Account/Register">Register</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>
@@ -69,7 +93,8 @@
     <footer class="border-top py-3 mt-4" style="background:#fff;">
         <div class="container d-flex justify-content-between small">
             <span>© @DateTime.Now.Year Code Innovators</span>
-            <span>Built by CPA Team — Allison Daniel, Salal Al-Salami, Kazi Nafiur Rashid Alvi,
+            <span>
+                Built by CPA Team — Allison Daniel, Salal Al-Salami, Kazi Nafiur Rashid Alvi,
                 Evan Arnold, Sabin Baral, Bipin Basnet, Shanita Boonratanayothin, Nishan Chokhal, Giriraj Dahal
             </span>
         </div>
@@ -84,10 +109,9 @@
     <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
     <script>
         $(function () {
-          const t = '@TempData["ToastType"]', m = '@TempData["ToastMessage"]';
-          if (m) { toastr.options.timeOut = 2500; toastr[t||"success"](m); }
+            const t = '@TempData["ToastType"]', m = '@TempData["ToastMessage"]';
+            if (m) { toastr.options.timeOut = 2500; toastr[t || "success"](m); }
         });
     </script>
-
 </body>
 </html>
