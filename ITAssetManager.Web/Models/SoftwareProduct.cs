@@ -11,67 +11,62 @@ namespace ITAssetManager.Web.Models
         public int Id { get; set; }
 
         [Required]
+        [StringLength(100)]
+        [Display(Name = "Product Name")]
         public string Name { get; set; } = string.Empty;
 
+        [StringLength(100)]
+        [Display(Name = "Vendor")]
         public string? Vendor { get; set; }
-        public string? Version { get; set; }
-        public decimal? UnitCost { get; set; }
 
-        // Optional categorization (your views mentioned them)
+        [StringLength(50)]
+        [Display(Name = "Version")]
+        public string? Version { get; set; }
+
+        [StringLength(100)]
+        [Display(Name = "Publisher")]
         public string? Publisher { get; set; }
+
+        [StringLength(50)]
+        [Display(Name = "Category")]
         public string? Category { get; set; }
 
-        // Properties that your views expect - adding them directly to SoftwareProduct
-        public string? LicenseKey { get; set; }
+        [StringLength(500)]
+        [Display(Name = "Description")]
+        public string? Description { get; set; }
 
-        [DataType(DataType.Date)]
-        public DateTime? PurchaseDate { get; set; }
+        // Relationships
+        public ICollection<SoftwareLicense> Licenses { get; set; } = new List<SoftwareLicense>();
+        public ICollection<LicenseAssignment> Assignments { get; set; } = new List<LicenseAssignment>();
 
-        [DataType(DataType.Date)]
-        public DateTime? LicenseExpiry { get; set; }
-
-        // Alias for LicenseExpiry (if your views use both names)
+        // Calculated properties from related licenses
         [NotMapped]
-        public DateTime? ExpiryDate
-        {
-            get => LicenseExpiry;
-            set => LicenseExpiry = value;
-        }
-
-        // Seat management properties
-        public int SeatCount { get; set; }
-        public int SeatsAssigned { get; set; }
-        public int SeatsInUse { get; set; }
-        public int SeatsPurchased { get; set; }
-
-        // Calculated properties based on related licenses
-        [NotMapped]
-        public int TotalSeats => Licenses.Sum(l => l.SeatsPurchased ?? 0);
+        [Display(Name = "Total Licenses")]
+        public int TotalLicenses => Licenses?.Count ?? 0;
 
         [NotMapped]
-        public int TotalSeatsAssigned => Licenses.Sum(l => l.SeatsAssigned ?? 0);
+        [Display(Name = "Total Seats Purchased")]
+        public int TotalSeatsPurchased => Licenses?.Sum(l => l.SeatsPurchased ?? 0) ?? 0;
 
         [NotMapped]
-        public int TotalSeatsInUse => Assignments.Count(a => a.AssignedOn.HasValue);
+        [Display(Name = "Total Seats Assigned")]
+        public int TotalSeatsAssigned => Licenses?.Sum(l => l.SeatsAssigned ?? 0) ?? 0;
 
         [NotMapped]
-        public int SeatsAvailable => TotalSeats - TotalSeatsAssigned;
+        [Display(Name = "Total Seats Available")]
+        public int SeatsAvailable => TotalSeatsPurchased - TotalSeatsAssigned;
 
         [NotMapped]
-        public DateTime? NextExpiryDate => Licenses
+        [Display(Name = "Next Expiry Date")]
+        public DateTime? NextExpiryDate => Licenses?
             .Where(l => l.ExpiryDate.HasValue)
             .OrderBy(l => l.ExpiryDate)
             .Select(l => l.ExpiryDate)
             .FirstOrDefault();
 
         [NotMapped]
-        public bool IsExpired => NextExpiryDate.HasValue && NextExpiryDate.Value < DateTime.Today;
-
-        [NotMapped]
-        public bool IsExpiringSoon => NextExpiryDate.HasValue && NextExpiryDate.Value <= DateTime.Today.AddDays(30);
-
-        // Relationships
-        public ICollection<SoftwareLicense> Licenses { get; set; } = new List<SoftwareLicense>();
-        public ICollection<LicenseAssignment> Assignments { get; set; } = new List<LicenseAssignment>();
+        [Display(Name = "Total Cost")]
+        [DataType(DataType.Currency)]
+        public decimal TotalCost => Licenses?.Sum(l => l.Cost ?? 0) ?? 0;
     }
 }

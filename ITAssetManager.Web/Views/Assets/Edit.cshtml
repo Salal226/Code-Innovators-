@@ -1,18 +1,32 @@
 ﻿@model ITAssetManager.Web.Models.Asset
-
 @{
     ViewData["Title"] = "Edit";
+    var isAdminOrDev = User?.IsInRole("Administrator") == true || User?.IsInRole("Developer") == true;
 }
 
 <h1>Edit</h1>
-
 <h4>Asset</h4>
 <hr />
+
+@if (ViewData.ModelState != null && !ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <h4>Validation Errors:</h4>
+        <ul>
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
+
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
+
             <div class="form-group">
                 <label asp-for="AssetTag" class="control-label"></label>
                 <input asp-for="AssetTag" class="form-control" />
@@ -38,16 +52,27 @@
                 <input asp-for="PurchaseDate" class="form-control" />
                 <span asp-validation-for="PurchaseDate" class="text-danger"></span>
             </div>
+
+            @* Only show Purchase Cost to Admin and Developer *@
+            @if (isAdminOrDev)
+            {
+                <div class="form-group">
+                    <label asp-for="PurchaseCost" class="control-label"></label>
+                    <input asp-for="PurchaseCost" class="form-control" />
+                    <span asp-validation-for="PurchaseCost" class="text-danger"></span>
+                </div>
+            }
+            else
+            {
+                @* Hidden field to preserve the value for Staff users *@
+                <input type="hidden" asp-for="PurchaseCost" />
+            }
+
             <div class="form-group">
-                <label asp-for="PurchaseCost" class="control-label"></label>
-                <input asp-for="PurchaseCost" class="form-control" />
-                <span asp-validation-for="PurchaseCost" class="text-danger"></span>
-            </div>
-            @* <div class="form-group">
                 <label asp-for="WarrantyEnd" class="control-label"></label>
                 <input asp-for="WarrantyEnd" class="form-control" />
                 <span asp-validation-for="WarrantyEnd" class="text-danger"></span>
-            </div> *@
+            </div>
             <div class="form-group">
                 <label asp-for="Status" class="control-label"></label>
                 <input asp-for="Status" class="form-control" />
@@ -69,11 +94,12 @@
         </form>
     </div>
 </div>
-
 <div>
     <a asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

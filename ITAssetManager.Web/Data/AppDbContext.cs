@@ -26,7 +26,7 @@ namespace ITAssetManager.Web.Data
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false)
-                .AddJsonFile("appsettings.Development.json", optional: true) // uncomment if you want
+                .AddJsonFile("appsettings.Development.json", optional: true)
                 .AddEnvironmentVariables()
                 .Build();
 
@@ -49,11 +49,19 @@ namespace ITAssetManager.Web.Data
     }
 
     /// <summary>
-    /// Primary EF Core DbContext. If you are NOT using Identity, change the base to DbContext.
+    /// Primary EF Core DbContext with custom ApplicationUser for Identity.
     /// </summary>
-    public class AppDbContext : IdentityDbContext<IdentityUser> // or: DbContext
+    public class AppDbContext : IdentityDbContext<ApplicationUser>
     {
+        private readonly IHttpContextAccessor? _httpContextAccessor;
+
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+        public AppDbContext(DbContextOptions<AppDbContext> options, IHttpContextAccessor httpContextAccessor)
+            : base(options)
+        {
+            _httpContextAccessor = httpContextAccessor;
+        }
 
         public DbSet<Asset> Assets => Set<Asset>();
         public DbSet<Person> People => Set<Person>();
@@ -74,7 +82,8 @@ namespace ITAssetManager.Web.Data
 
             // Sample precision config (optional but nice)
             b.Entity<Asset>().Property(a => a.PurchaseCost).HasPrecision(18, 2);
-            b.Entity<SoftwareProduct>().Property(s => s.UnitCost).HasPrecision(18, 2);
+            // Cost is now in SoftwareLicense, not SoftwareProduct
+            b.Entity<SoftwareLicense>().Property(s => s.Cost).HasPrecision(18, 2);
 
             // Simple relationships (EF can infer these, but being explicit helps readability)
             b.Entity<LicenseAssignment>()
@@ -117,12 +126,14 @@ namespace ITAssetManager.Web.Data
         }
 
         /// <summary>
-        /// Lightweight audit log. Guarded so it won't break the very first migration.
+        /// Lightweight audit log with authenticated user tracking.
         /// </summary>
         public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
         {
             var logs = new List<ChangeLog>();
-            var username = "system"; // wire your identity user name in controllers later
+
+            // Get current authenticated user
+            var username = _httpContextAccessor?.HttpContext?.User?.Identity?.Name ?? "system";
 
             foreach (var e in ChangeTracker.Entries().Where(x => x.State != EntityState.Unchanged))
             {

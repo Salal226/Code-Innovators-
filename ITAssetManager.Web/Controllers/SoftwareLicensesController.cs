@@ -1,169 +1,290 @@
-﻿using ITAssetManager.Web.Data;
-using ITAssetManager.Web.Models;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-
-
-
-
-
+using ITAssetManager.Web.Data;
+using ITAssetManager.Web.Models;
 
 namespace ITAssetManager.Web.Controllers
 {
+    [Authorize] // All actions require authentication
     public class SoftwareLicensesController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly ILogger<SoftwareLicensesController> _logger;
 
-        public SoftwareLicensesController(AppDbContext context)
+        public SoftwareLicensesController(AppDbContext context, ILogger<SoftwareLicensesController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: SoftwareLicenses
+        // All authenticated users can view
+        [Authorize(Policy = "CanViewAssets")]
         public async Task<IActionResult> Index()
         {
             var licenses = await _context.SoftwareLicenses
-                .Include(s => s.Product)
-                .OrderBy(s => s.Product!.Name)
+                .Include(l => l.Product)  // ✅ Include product info
+                .OrderBy(l => l.LicenseKey)
                 .ToListAsync();
+
             return View(licenses);
         }
 
         // GET: SoftwareLicenses/Details/5
+        // All authenticated users can view details
+        [Authorize(Policy = "CanViewAssets")]
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var softwareLicense = await _context.SoftwareLicenses
-                .Include(s => s.Product)
+            var license = await _context.SoftwareLicenses
+                .Include(l => l.Product)  // ✅ Include product info
                 .FirstOrDefaultAsync(m => m.Id == id);
-                
-            if (softwareLicense == null)
-            {
-                return NotFound();
-            }
 
-            return View(softwareLicense);
+            if (license == null) return NotFound();
+
+            return View(license);
         }
 
         // GET: SoftwareLicenses/Create
-        public IActionResult Create()
+        // Only Administrators can create licenses
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> Create()
         {
-            ViewData["SoftwareProductId"] = new SelectList(_context.SoftwareProducts, "Id", "Name");
+            // ✅ Populate dropdowns
+            ViewBag.SoftwareProductId = new SelectList(
+                await _context.SoftwareProducts.OrderBy(p => p.Name).ToListAsync(),
+                "Id",
+                "Name"
+            );
+
+            ViewBag.PersonId = new SelectList(
+                await _context.People.OrderBy(p => p.LastName).ThenBy(p => p.FirstName).ToListAsync(),
+                "Id",
+                "FullName"
+            );
+
             return View();
         }
 
         // POST: SoftwareLicenses/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,SoftwareProductId,LicenseKey,PurchaseDate,ExpiryDate,SeatsPurchased,SeatsAssigned,Cost,Vendor,Notes")] SoftwareLicense softwareLicense)
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> Create(SoftwareLicense license, int? PersonId)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(softwareLicense);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    // ✅ Save the license
+                    _context.Add(license);
+                    await _context.SaveChangesAsync();
+
+                    // ✅ Create LicenseAssignment if a person was selected
+                    if (PersonId.HasValue && PersonId.Value > 0)
+                    {
+                        var assignment = new LicenseAssignment
+                        {
+                            SoftwareProductId = license.SoftwareProductId,
+                            PersonId = PersonId.Value,
+                            AssignedOn = DateTime.Now,
+                            IsActive = true
+                        };
+                        _context.LicenseAssignments.Add(assignment);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    _logger.LogInformation("Software License {LicenseKey} created by {User}",
+                        license.LicenseKey, User.Identity?.Name);
+
+                    TempData["SuccessMessage"] = "License created successfully!";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error creating license");
+                    ModelState.AddModelError("", "An error occurred while creating the license.");
+                }
             }
-            ViewData["SoftwareProductId"] = new SelectList(_context.SoftwareProducts, "Id", "Name", softwareLicense.SoftwareProductId);
-            return View(softwareLicense);
+
+            // ✅ Repopulate dropdowns if validation fails
+            ViewBag.SoftwareProductId = new SelectList(
+                await _context.SoftwareProducts.OrderBy(p => p.Name).ToListAsync(),
+                "Id",
+                "Name",
+                license.SoftwareProductId
+            );
+
+            ViewBag.PersonId = new SelectList(
+                await _context.People.OrderBy(p => p.LastName).ThenBy(p => p.FirstName).ToListAsync(),
+                "Id",
+                "FullName",
+                PersonId
+            );
+
+            return View(license);
         }
 
         // GET: SoftwareLicenses/Edit/5
+        // Admin or Developer can edit
+        [Authorize(Policy = "CanManageAssets")]
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var softwareLicense = await _context.SoftwareLicenses.FindAsync(id);
-            if (softwareLicense == null)
-            {
-                return NotFound();
-            }
-            ViewData["SoftwareProductId"] = new SelectList(_context.SoftwareProducts, "Id", "Name", softwareLicense.SoftwareProductId);
-            return View(softwareLicense);
+            var license = await _context.SoftwareLicenses.FindAsync(id);
+            if (license == null) return NotFound();
+
+            // ✅ Populate dropdowns
+            ViewBag.SoftwareProductId = new SelectList(
+                await _context.SoftwareProducts.OrderBy(p => p.Name).ToListAsync(),
+                "Id",
+                "Name",
+                license.SoftwareProductId
+            );
+
+            // ✅ Find existing assignment
+            var existingAssignment = await _context.LicenseAssignments
+                .FirstOrDefaultAsync(la => la.SoftwareProductId == license.SoftwareProductId && la.IsActive);
+
+            ViewBag.PersonId = new SelectList(
+                await _context.People.OrderBy(p => p.LastName).ThenBy(p => p.FirstName).ToListAsync(),
+                "Id",
+                "FullName",
+                existingAssignment?.PersonId
+            );
+
+            return View(license);
         }
 
         // POST: SoftwareLicenses/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,SoftwareProductId,LicenseKey,PurchaseDate,ExpiryDate,SeatsPurchased,SeatsAssigned,Cost,Vendor,Notes")] SoftwareLicense softwareLicense)
+        [Authorize(Policy = "CanManageAssets")]
+        public async Task<IActionResult> Edit(int id, SoftwareLicense license, int? PersonId)
         {
-            if (id != softwareLicense.Id)
-            {
-                return NotFound();
-            }
+            if (id != license.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(softwareLicense);
+                    _context.Update(license);
                     await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!SoftwareLicenseExists(softwareLicense.Id))
+
+                    // ✅ Update assignment if needed
+                    var existingAssignment = await _context.LicenseAssignments
+                        .FirstOrDefaultAsync(la => la.SoftwareProductId == license.SoftwareProductId && la.IsActive);
+
+                    if (PersonId.HasValue && PersonId.Value > 0)
                     {
-                        return NotFound();
+                        if (existingAssignment != null)
+                        {
+                            // Update existing
+                            existingAssignment.PersonId = PersonId.Value;
+                            _context.Update(existingAssignment);
+                        }
+                        else
+                        {
+                            // Create new
+                            var newAssignment = new LicenseAssignment
+                            {
+                                SoftwareProductId = license.SoftwareProductId,
+                                PersonId = PersonId.Value,
+                                AssignedOn = DateTime.Now,
+                                IsActive = true
+                            };
+                            _context.Add(newAssignment);
+                        }
+                        await _context.SaveChangesAsync();
                     }
+                    else if (existingAssignment != null)
+                    {
+                        // Remove assignment if person was cleared
+                        existingAssignment.IsActive = false;
+                        _context.Update(existingAssignment);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    _logger.LogInformation("Software License {LicenseKey} updated by {User}",
+                        license.LicenseKey, User.Identity?.Name);
+
+                    TempData["SuccessMessage"] = "License updated successfully!";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DbUpdateConcurrencyException ex)
+                {
+                    if (!LicenseExists(license.Id))
+                        return NotFound();
                     else
                     {
-                        throw;
+                        _logger.LogError(ex, "Concurrency error updating license {Id}", id);
+                        ModelState.AddModelError("", "The license was modified by another user.");
                     }
                 }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["SoftwareProductId"] = new SelectList(_context.SoftwareProducts, "Id", "Name", softwareLicense.SoftwareProductId);
-            return View(softwareLicense);
-        }
-
-        // GET: SoftwareLicenses/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
             }
 
-            var softwareLicense = await _context.SoftwareLicenses
-                .Include(s => s.Product)
-                .FirstOrDefaultAsync(m => m.Id == id);
-                
-            if (softwareLicense == null)
-            {
-                return NotFound();
-            }
+            // ✅ Repopulate dropdowns
+            ViewBag.SoftwareProductId = new SelectList(
+                await _context.SoftwareProducts.OrderBy(p => p.Name).ToListAsync(),
+                "Id",
+                "Name",
+                license.SoftwareProductId
+            );
 
-            return View(softwareLicense);
+            ViewBag.PersonId = new SelectList(
+                await _context.People.OrderBy(p => p.LastName).ThenBy(p => p.FirstName).ToListAsync(),
+                "Id",
+                "FullName",
+                PersonId
+            );
+
+            return View(license);
         }
 
         // POST: SoftwareLicenses/Delete/5
-        [HttpPost, ActionName("Delete")]
+        // Only Administrators can delete
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> Delete(int id)
         {
-            var softwareLicense = await _context.SoftwareLicenses.FindAsync(id);
-            if (softwareLicense != null)
+            try
             {
-                _context.SoftwareLicenses.Remove(softwareLicense);
-                await _context.SaveChangesAsync();
+                var license = await _context.SoftwareLicenses.FindAsync(id);
+                if (license != null)
+                {
+                    // ✅ Also deactivate any assignments
+                    var assignments = await _context.LicenseAssignments
+                        .Where(la => la.SoftwareProductId == license.SoftwareProductId)
+                        .ToListAsync();
+
+                    foreach (var assignment in assignments)
+                    {
+                        assignment.IsActive = false;
+                    }
+
+                    _context.SoftwareLicenses.Remove(license);
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogWarning("Software License {LicenseKey} deleted by {User}",
+                        license.LicenseKey, User.Identity?.Name);
+
+                    TempData["SuccessMessage"] = "License deleted successfully!";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting license {Id}", id);
+                TempData["ErrorMessage"] = "An error occurred while deleting the license.";
             }
 
             return RedirectToAction(nameof(Index));
         }
 
-        private bool SoftwareLicenseExists(int id)
-        {
-            return _context.SoftwareLicenses.Any(e => e.Id == id);
-        }
+        private bool LicenseExists(int id) => _context.SoftwareLicenses.Any(e => e.Id == id);
     }
 }

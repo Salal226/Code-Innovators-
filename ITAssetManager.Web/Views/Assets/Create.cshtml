@@ -9,11 +9,25 @@
 
         <form asp-action="Create">
             <div class="row g-3">
+                <!-- ADDED: Name field (REQUIRED) -->
+                <div class="col-md-6">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" placeholder="e.g., Lenovo ThinkPad" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
                 <div class="col-md-6">
                     <label asp-for="AssetTag" class="form-label"></label>
                     <input asp-for="AssetTag" class="form-control" />
                     <span asp-validation-for="AssetTag" class="text-danger"></span>
                 </div>
+
+                <!-- ADDED: Brand field -->
+                <div class="col-md-6">
+                    <label asp-for="Brand" class="form-label"></label>
+                    <input asp-for="Brand" class="form-control" placeholder="e.g., Lenovo, Dell, HP" />
+                </div>
+
                 <div class="col-md-6">
                     <label asp-for="Category" class="form-label"></label>
                     <input asp-for="Category" class="form-control" />
@@ -30,20 +44,26 @@
 
                 <div class="col-md-6">
                     <label asp-for="PurchaseDate" class="form-label"></label>
-                    <input asp-for="PurchaseDate" class="form-control" />
+                    <input asp-for="PurchaseDate" class="form-control" type="date" />
                 </div>
                 <div class="col-md-6">
                     <label asp-for="PurchaseCost" class="form-label"></label>
-                    <input asp-for="PurchaseCost" class="form-control" />
+                    <input asp-for="PurchaseCost" class="form-control" type="number" step="0.01" placeholder="0.00" />
                 </div>
 
                 <div class="col-md-6">
                     <label asp-for="WarrantyEnd" class="form-label"></label>
-                    <input asp-for="WarrantyEnd" class="form-control" />
+                    <input asp-for="WarrantyEnd" class="form-control" type="date" />
                 </div>
                 <div class="col-md-6">
                     <label asp-for="Status" class="form-label"></label>
-                    <input asp-for="Status" class="form-control" />
+                    <input asp-for="Status" class="form-control" placeholder="e.g., Active, In Repair" />
+                </div>
+
+                <!-- ADDED: Notes field -->
+                <div class="col-12">
+                    <label asp-for="Notes" class="form-label"></label>
+                    <textarea asp-for="Notes" class="form-control" rows="2" placeholder="Additional notes (optional)"></textarea>
                 </div>
 
                 <!-- ============== Person (choose existing OR add new) ============== -->
@@ -52,7 +72,7 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Choose existing person</label>
-                    <select asp-for="AssignedToPersonId" class="form-select" asp-items="ViewBag.PersonId">
+                    <select asp-for="AssignedToPersonId" class="form-select" asp-items="ViewBag.AssignedToPersonId">
                         <option value="">-- Unassigned --</option>
                     </select>
                 </div>

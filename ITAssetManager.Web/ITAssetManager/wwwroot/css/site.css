@@ -1,0 +1,270 @@
+/* ==========================================
+   Code Innovators · IT Asset Manager
+   Global brand styles for ALL pages
+   ========================================== */
+
+/* ---- Base / typography (keep responsive font size) ---- */
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+}
+
+/* ---- Brand palette ---- */
+:root {
+    --ci-navy: #0B1E3A; /* primary brand */
+    --ci-navy-600: #132A50;
+    --ci-teal: #10B3A3; /* accent / primary btn */
+    --ci-teal-700: #0C8E86;
+    --ci-slate: #475569; /* body text */
+    --ci-slate-500: #64748B; /* muted text */
+    --ci-light: #F5F7FA; /* app background */
+    --ci-white: #FFFFFF;
+    --ci-border: #E5E7EB;
+    --ci-focus: rgba(16,179,163,.35);
+    --ci-shadow: 0 6px 22px rgba(2,8,23,.08);
+}
+
+
+
+/* ---- Page basics ---- */
+body {
+    background: linear-gradient(135deg, #0B1E3A 0%, #10B3A3 40%, #F5F7FA 100%);
+    color: var(--ci-slate);
+    min-height: 100vh;
+    background-attachment: fixed; /* smooth effect */
+}
+
+
+
+
+h1, h2, h3, h4, h5 {
+    color: var(--ci-navy);
+    letter-spacing: .2px;
+}
+
+a {
+    color: var(--ci-teal);
+}
+
+    a:hover {
+        color: var(--ci-teal-700);
+    }
+
+/* ---- Focus ring (forms/buttons/links) ---- */
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus,
+.form-select:focus {
+    box-shadow: 0 0 0 0.15rem var(--ci-white), 0 0 0 0.35rem var(--ci-focus);
+    border-color: var(--ci-teal);
+    outline: 0;
+}
+
+/* ---- Navbar ---- */
+.navbar {
+    background: var(--ci-navy) !important;
+    box-shadow: var(--ci-shadow);
+}
+
+    .navbar .navbar-brand,
+    .navbar .nav-link {
+        color: #fff !important;
+        opacity: .95;
+    }
+
+        .navbar .nav-link:hover,
+        .navbar .nav-link.active {
+            color: var(--ci-teal) !important;
+            opacity: 1;
+        }
+
+/* ---- Buttons ---- */
+.btn-primary {
+    background: var(--ci-teal);
+    border-color: var(--ci-teal);
+    color: #fff;
+}
+
+    .btn-primary:hover {
+        background: var(--ci-teal-700);
+        border-color: var(--ci-teal-700);
+    }
+
+.btn-outline-primary {
+    color: var(--ci-teal);
+    border-color: var(--ci-teal);
+    background: transparent;
+}
+
+    .btn-outline-primary:hover {
+        color: #fff;
+        background: var(--ci-teal);
+        border-color: var(--ci-teal);
+    }
+
+/* ---- Forms ---- */
+.form-label, label {
+    color: var(--ci-slate-500);
+}
+
+.form-control, .form-select {
+    border: 1px solid var(--ci-border);
+    border-radius: 10px;
+    padding: .6rem .75rem;
+    background-color: #fff;
+}
+
+.text-danger, .field-validation-error {
+    color: #DC2626;
+}
+
+/* ---- Cards / panels ---- */
+.card {
+    background: #fff;
+    border: 1px solid var(--ci-border);
+    border-radius: 14px;
+    box-shadow: var(--ci-shadow);
+}
+
+.card-header {
+    background: #fff;
+    border-bottom: 1px solid var(--ci-border);
+    color: var(--ci-navy);
+    font-weight: 600;
+}
+
+/* ---- Tables ---- */
+.table {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--ci-shadow);
+}
+
+    .table thead th {
+        background: var(--ci-navy);
+        color: #fff;
+        border-color: var(--ci-navy);
+    }
+
+    .table tbody tr:hover {
+        background: #F0F7F6;
+    }
+
+/* ---- Badges / status chips ---- */
+.badge-ci {
+    background: rgba(16,179,163,.12);
+    color: var(--ci-teal);
+    border: 1px solid rgba(16,179,163,.4);
+    padding: .4rem .6rem;
+    border-radius: 999px;
+    font-weight: 600;
+}
+
+/* ---- Footer ---- */
+footer {
+    background: #fff;
+    color: var(--ci-slate-500);
+    border-top: 1px solid var(--ci-border);
+}
+
+/* ---- Optional: Home hero block (if you use it) ---- */
+.hero {
+    background: linear-gradient(180deg, var(--ci-navy) 0%, var(--ci-navy) 62%, transparent 62%);
+    padding: 2.5rem 0 1rem;
+    color: #fff;
+}
+
+    .hero .hero-logo {
+        height: 140px;
+        width: auto;
+        display: block;
+        margin: 0 auto 1rem;
+    }
+
+    .hero h1 {
+        color: #fff;
+        font-size: 2.4rem;
+    }
+
+    .hero p {
+        color: #E2E8F0;
+        font-size: 1.1rem;
+    }
+
+/* ---- Form styling improvements ---- */
+.form-label, label {
+    font-weight: 600; /* bold */
+    font-size: 1rem; /* larger text */
+    color: var(--ci-navy); /* strong brand color */
+    margin-bottom: .35rem;
+}
+
+.form-control, .form-select {
+    font-size: 1rem;
+    padding: .6rem .75rem;
+    border-radius: 10px;
+}
+
+/* Submit button styling */
+.btn-create {
+    background: var(--ci-teal);
+    border: none;
+    border-radius: 10px;
+    padding: .7rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    transition: all .2s ease-in-out;
+}
+
+    .btn-create:hover {
+        background: var(--ci-teal-700);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    }
+/* ===== Stronger Field Borders ===== */
+
+.form-control,
+.form-select {
+    font-size: 1rem;
+    padding: .75rem 1rem;
+    border: 2px solid var(--ci-teal); /* Teal border by default */
+    border-radius: 10px;
+    background-color: #fff;
+    color: var(--ci-slate);
+    transition: all .2s ease-in-out;
+}
+
+    /* On hover, darken the border */
+    .form-control:hover,
+    .form-select:hover {
+        border-color: var(--ci-teal-700);
+    }
+
+    /* On focus, thicker + glowing */
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--ci-teal-700);
+        box-shadow: 0 0 0 0.25rem rgba(16,179,163,.3);
+        outline: none;
+    }
+#toast-container > .toast {
+    border-radius: 10px;
+}

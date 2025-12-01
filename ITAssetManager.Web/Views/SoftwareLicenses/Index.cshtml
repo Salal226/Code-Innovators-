@@ -1,79 +1,160 @@
 ﻿@model IEnumerable<ITAssetManager.Web.Models.SoftwareLicense>
+
 @{
     ViewData["Title"] = "Software Licenses";
+    var isAdmin = User.IsInRole("Administrator");
+    var isAdminOrDev = User.IsInRole("Administrator") || User.IsInRole("Developer");
 }
 
-<h1>Software Licenses</h1>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Software Licenses</h1>
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Create New License</a>
-</p>
-
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Software Product</th>
-            <th>License Key</th>
-            <th>Purchase Date</th>
-            <th>Expiry Date</th>
-            <th>Seats Purchased</th>
-            <th>Seats Assigned</th>
-            <th>Cost</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
+        @* Only Administrators can create *@
+        @if (isAdmin)
         {
-            <tr>
-                <td>@(item.Product?.Name ?? "N/A")</td>
-                <td>
-                    @if (!string.IsNullOrEmpty(item.LicenseKey))
-                    {
-                        <span class="font-monospace">@item.LicenseKey</span>
-                    }
-                    else
-                    {
-                        <span class="text-muted">N/A</span>
-                    }
-                </td>
-                <td>@(item.PurchaseDate?.ToString("yyyy-MM-dd") ?? "N/A")</td>
-                <td>
-                    @if (item.ExpiryDate.HasValue)
-                    {
-                        <span class="@(item.IsExpired ? "text-danger" : item.IsExpiringSoon ? "text-warning" : "text-success")">
-                            @item.ExpiryDate.Value.ToString("yyyy-MM-dd")
-                        </span>
-                    }
-                    else
-                    {
-                        <span class="text-muted">N/A</span>
-                    }
-                </td>
-                <td>@(item.SeatsPurchased?.ToString() ?? "N/A")</td>
-                <td>@(item.SeatsAssigned?.ToString() ?? "0")</td>
-                <td>@(item.Cost?.ToString("C") ?? "N/A")</td>
-                <td>
-                    @if (item.IsExpired)
-                    {
-                        <span class="badge bg-danger">Expired</span>
-                    }
-                    else if (item.IsExpiringSoon)
-                    {
-                        <span class="badge bg-warning">Expiring Soon</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-success">Active</span>
-                    }
-                </td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Edit</a>
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info">Details</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Delete</a>
-                </td>
-            </tr>
+            <a asp-action="Create" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Create New License
+            </a>
         }
-    </tbody>
-</table>
+    </div>
+
+    @* Success/Error Messages *@
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>License Key</th>
+                    <th>Purchase Date</th>
+                    <th>Expiry Date</th>
+                    <th>Seats Purchased</th>
+                    <th>Seats Assigned</th>
+                    <th>Cost</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        var isExpired = item.ExpiryDate.HasValue && item.ExpiryDate.Value < DateTime.Now;
+
+                        <tr>
+                            <td>@(item.LicenseKey ?? "N/A")</td>
+                            <td>@(item.PurchaseDate?.ToString("yyyy-MM-dd") ?? "N/A")</td>
+                            <td class="@(isExpired ? "text-danger fw-bold" : "")">
+                                @(item.ExpiryDate?.ToString("yyyy-MM-dd") ?? "N/A")
+                                @if (isExpired)
+                                {
+                                    <span class="badge bg-danger ms-2">Expired</span>
+                                }
+                            </td>
+                            <td>@(item.SeatsPurchased?.ToString() ?? "N/A")</td>
+                            <td>@(item.SeatsAssigned?.ToString() ?? "N/A")</td>
+                            <td>@(item.Cost?.ToString("C") ?? "N/A")</td>
+                            <td class="text-nowrap">
+                                @* All users can view details *@
+                                <a asp-action="Details" asp-route-id="@item.Id"
+                                   class="btn btn-sm btn-info text-white">
+                                    Details
+                                </a>
+
+                                @* Only Admin or Developer can edit *@
+                                @if (isAdminOrDev)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.Id"
+                                       class="btn btn-sm btn-primary">
+                                        Edit
+                                    </a>
+                                }
+
+                                @* Only Administrator can delete *@
+                                @if (isAdmin)
+                                {
+                                    <button type="button" class="btn btn-sm btn-danger"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteModal-@item.Id">
+                                        Delete
+                                    </button>
+
+                                    <!-- Delete Confirmation Modal -->
+                                    <div class="modal fade" id="deleteModal-@item.Id" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-danger text-white">
+                                                    <h5 class="modal-title">
+                                                        <i class="bi bi-exclamation-triangle"></i> Confirm Delete
+                                                    </h5>
+                                                    <button type="button" class="btn-close btn-close-white"
+                                                            data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Are you sure you want to delete this license?</p>
+                                                    <ul class="list-unstyled">
+                                                        <li><strong>License Key:</strong> @item.LicenseKey</li>
+                                                        <li><strong>Purchase Date:</strong> @item.PurchaseDate?.ToString("yyyy-MM-dd")</li>
+                                                    </ul>
+                                                    <div class="alert alert-warning">
+                                                        <i class="bi bi-exclamation-triangle"></i>
+                                                        This action cannot be undone!
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                            data-bs-dismiss="modal">
+                                                        Cancel
+                                                    </button>
+                                                    <form asp-action="Delete" asp-route-id="@item.Id"
+                                                          method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-danger">
+                                                            <i class="bi bi-trash"></i> Delete
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">
+                            No licenses found.
+                            @if (isAdmin)
+                            {
+                                <a asp-action="Create" class="ms-2">Create your first license</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        setTimeout(function() { $('.alert').fadeOut('slow'); }, 3000);
+    </script>
+}

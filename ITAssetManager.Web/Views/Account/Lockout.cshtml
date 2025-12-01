@@ -1,0 +1,87 @@
+﻿@{
+    ViewData["Title"] = "Account Locked";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Account Locked
+                    </h4>
+                </div>
+                <div class="card-body text-center p-5">
+                    <i class="bi bi-lock-fill text-warning" style="font-size: 5rem;"></i>
+
+                    <h2 class="mt-4 mb-3">Your Account Has Been Locked</h2>
+
+                    <div class="alert alert-warning" role="alert">
+                        <strong><i class="bi bi-info-circle"></i> Security Notice</strong>
+                        <p class="mb-0 mt-2">
+                            Your account has been temporarily locked due to multiple failed login attempts.
+                        </p>
+                    </div>
+
+                    <p class="text-muted mb-4">
+                        This is a security measure to protect your account from unauthorized access.
+                    </p>
+
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="bi bi-clock"></i> What Now?
+                            </h5>
+                            <ul class="list-unstyled text-start mb-0">
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    Wait <strong>5 minutes</strong> and try again
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    Contact your administrator if you forgot your password
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    Ensure you're using the correct credentials
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <p class="text-muted">
+                        Need help? Contact:
+                        <br>
+                        <strong><i class="bi bi-envelope"></i> admin@codeinnovators.com</strong>
+                    </p>
+
+                    <div class="mt-4">
+                        <a asp-action="Login" asp-controller="Account" class="btn btn-primary">
+                            <i class="bi bi-arrow-clockwise"></i> Try Again
+                        </a>
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-house-door"></i> Go to Home
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer text-muted text-center bg-light">
+                    <small>
+                        <i class="bi bi-shield-check"></i>
+                        Code Innovators IT Asset Manager - Secure Login System
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .card-header {
+        border-bottom: 3px solid rgba(0, 0, 0, 0.1);
+    }
+</style>

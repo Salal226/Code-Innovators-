@@ -26,19 +26,21 @@ namespace ITAssetManager.Web.Controllers
             var vm = new DashboardViewModel
             {
                 TotalAssets = await _context.Assets.CountAsync(),
-                InRepair = await _context.Assets.CountAsync(a => a.Status == "InRepair"),
+
+                InRepair = await _context.Assets.CountAsync(a => a.Status == "In repair"),
+
                 ExpiringWarranty30 = await _context.Assets.CountAsync(
                     a => a.WarrantyExpiry.HasValue && a.WarrantyExpiry.Value <= cutoff),
-                SoftwareProducts = await _context.SoftwareProducts.CountAsync(),
-                LicensesTotalSeats = await _context.SoftwareProducts.SumAsync(s => (int?)s.SeatCount) ?? 0,
-                LicensesSeatsInUse = await _context.SoftwareProducts.SumAsync(s => (int?)s.SeatsInUse) ?? 0
-            };
 
+                SoftwareProducts = await _context.SoftwareProducts.CountAsync(),
+
+                // FIXED: Sum from SoftwareLicenses, not SoftwareProducts
+                LicensesTotalSeats = await _context.SoftwareLicenses.SumAsync(l => (int?)l.SeatsPurchased) ?? 0,
+                LicensesSeatsInUse = await _context.SoftwareLicenses.SumAsync(l => (int?)l.SeatsAssigned) ?? 0
+            };
 
             return View(vm);
         }
-
-
 
         public IActionResult Privacy() => View();
 

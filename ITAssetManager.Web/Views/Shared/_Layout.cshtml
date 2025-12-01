@@ -12,6 +12,9 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site-brand.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ITAssetManager.Web.styles.css" asp-append-version="true" />
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </head>
 <body>
     <header>
@@ -20,7 +23,7 @@
                 <a class="navbar-brand d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
                     <img src="~/img/logo-code-innovators.png" asp-append-version="true"
                          alt="Code Innovators Logo" style="height:32px;width:auto;margin-right:.5rem;">
-                    <span>Code Innovators · IT Asset Manager</span>
+                    <span>Code Innovators · IT Asset Management</span>
                 </a>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -31,26 +34,106 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">
+                                <i class="bi bi-house-door"></i> Home
+                            </a>
                         </li>
+
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Assets" asp-action="Index">
+                                    <i class="bi bi-laptop"></i> Assets
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="People" asp-action="Index">
+                                    <i class="bi bi-people"></i> People
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Locations" asp-action="Index">
+                                    <i class="bi bi-geo-alt"></i> Locations
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="SoftwareProducts" asp-action="Index">
+                                    <i class="bi bi-box-seam"></i> Software
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="SoftwareLicenses" asp-action="Index">
+                                    <i class="bi bi-key"></i> Licenses
+                                </a>
+                            </li>
+                        }
+
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link" asp-controller="Home" asp-action="Privacy">
+                                <i class="bi bi-shield-check"></i> Privacy
+                            </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Assets" asp-action="Index">Assets</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="People" asp-action="Index">People</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Locations" asp-action="Index">Locations</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="SoftwareProducts" asp-action="Index">Software</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="SoftwareLicenses" asp-action="Index">Licenses</a>
-                        </li>
+                    </ul>
+
+                    <!-- User Profile / Login -->
+                    <ul class="navbar-nav ms-auto">
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown"
+                                   role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-person-circle me-1"></i>
+                                    <span>@User.Identity.Name</span>
+                                    @if (User.IsInRole("Administrator"))
+                                    {
+                                        <span class="badge bg-danger ms-2">Admin</span>
+                                    }
+                                    else if (User.IsInRole("Developer"))
+                                    {
+                                        <span class="badge bg-info ms-2">Dev</span>
+                                    }
+                                    else if (User.IsInRole("GeneralStaff"))
+                                    {
+                                        <span class="badge bg-success ms-2">Staff</span>
+                                    }
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                    <li>
+                                        <span class="dropdown-item-text">
+                                            <small class="text-muted">Signed in as</small><br />
+                                            <strong>@User.Identity.Name</strong>
+                                        </span>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+
+                                    @if (User.IsInRole("Administrator"))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Account" asp-action="Register">
+                                                <i class="bi bi-person-plus"></i> Register New User
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                    }
+
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="bi bi-box-arrow-right"></i> Logout
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="Login">
+                                    <i class="bi bi-box-arrow-in-right"></i> Login
+                                </a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>
@@ -59,6 +142,39 @@
 
     <div class="container">
         <main role="main" class="pb-3">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (TempData["Warning"] != null)
+            {
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i>
+                    @TempData["Warning"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (TempData["Info"] != null)
+            {
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    @TempData["Info"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
             @RenderBody()
         </main>
     </div>
@@ -66,7 +182,8 @@
     <footer class="border-top py-3 mt-4" style="background:#fff;">
         <div class="container d-flex justify-content-between small">
             <span>© @DateTime.Now.Year Code Innovators</span>
-            <span>Built by CPA Team — Allison Daniel, Salal Al-Salami, Kazi Nafiur Rashid Alvi,
+            <span>
+                Built by CPA Team — Allison Daniel, Salal Al-Salami, Kazi Nafiur Rashid Alvi,
                 Evan Arnold, Sabin Baral, Bipin Basnet, Shanita Boonratanayothin, Nishan Chokhal, Giriraj Dahal
             </span>
         </div>
@@ -76,13 +193,22 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- Toastr for notifications -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
     <script>
         $(function () {
           const t = '@TempData["ToastType"]', m = '@TempData["ToastMessage"]';
-          if (m) { toastr.options.timeOut = 2500; toastr[t||"success"](m); }
+          if (m) {
+              toastr.options = {
+                  timeOut: 2500,
+                  positionClass: 'toast-top-right',
+                  closeButton: true,
+                  progressBar: true
+              };
+              toastr[t||"success"](m);
+          }
         });
     </script>
 

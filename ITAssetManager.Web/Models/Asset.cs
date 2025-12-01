@@ -12,7 +12,7 @@ namespace ITAssetManager.Web.Models
         [StringLength(50)]
         public string? AssetTag { get; set; }
 
-        [Required, StringLength(100)]
+        [StringLength(100)]
         public string Name { get; set; } = string.Empty;
 
         [StringLength(100)]

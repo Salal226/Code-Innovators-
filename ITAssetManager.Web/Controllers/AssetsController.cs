@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -10,35 +11,41 @@ using ITAssetManager.Web.Models.ViewModels;
 
 namespace ITAssetManager.Web.Controllers
 {
+    [Authorize] // All actions require authentication
     public class AssetsController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly ILogger<AssetsController> _logger;
 
-        public AssetsController(AppDbContext context)
+        public AssetsController(AppDbContext context, ILogger<AssetsController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: Assets
+        // All authenticated users can view the list
+        [Authorize(Policy = "CanViewAssets")]
         public async Task<IActionResult> Index(string? q, string sort = "tag", int page = 1, int pageSize = 10)
         {
             var query = _context.Assets
                 .AsNoTracking()
-                .Include(a => a.Person)     // mapped navs only
+                .Include(a => a.Person)
                 .Include(a => a.Location)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(q))
             {
-                var qq = q.Trim();
+                var qq = q.Trim().ToLower(); // ✅ CHANGED: Added ToLower() for case-insensitive search
                 query = query.Where(a =>
-                       (a.AssetTag ?? "").Contains(qq)
-                    || (a.Model ?? "").Contains(qq)
-                    || (a.SerialNumber ?? "").Contains(qq)
+                       (a.AssetTag ?? "").ToLower().Contains(qq)
+                    || (a.Model ?? "").ToLower().Contains(qq)
+                    || (a.SerialNumber ?? "").ToLower().Contains(qq)
+                    || (a.Status ?? "").ToLower().Contains(qq)  // ✅ NEW: Added Status search
                     || ((a.Person != null
                          ? ((a.Person.FirstName ?? "") + " " + (a.Person.LastName ?? ""))
                          : ""))
-                       .Contains(qq));
+                       .ToLower().Contains(qq));  // ✅ CHANGED: Added ToLower()
             }
 
             query = sort switch
@@ -57,10 +64,15 @@ namespace ITAssetManager.Web.Controllers
             ViewBag.Q = q;
             ViewBag.Sort = sort;
 
+            _logger.LogInformation("Assets Index viewed by {User}. Total: {Total}, Page: {Page}",
+                User.Identity?.Name, total, page);
+
             return View(items);
         }
 
         // GET: Assets/Details/5
+        // All authenticated users can view details
+        [Authorize(Policy = "CanViewAssets")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -77,127 +89,107 @@ namespace ITAssetManager.Web.Controllers
         }
 
         // GET: Assets/Create
-        public async Task<IActionResult> Create()
+        // Only Administrators can create assets
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> Create()  // ✅ CORRECT
         {
             var vm = new AssetCreateViewModel();
 
-            var people = await _context.People
-                .AsNoTracking()
-                .OrderBy(p => p.LastName).ThenBy(p => p.FirstName)
-                .Select(p => new
-                {
-                    p.Id,
-                    Display = (p.FirstName ?? "") +
-                              (string.IsNullOrEmpty(p.LastName) ? "" : " " + p.LastName)
-                })
-                .ToListAsync();
-            ViewBag.PersonId = new SelectList(people, "Id", "Display");
-
-            var locations = await _context.Locations
-                .AsNoTracking()
-                .OrderBy(l => l.Building).ThenBy(l => l.Room)
-                .Select(l => new
-                {
-                    l.Id,
-                    Display = l.Building + " - " + l.Room +
-                              (l.LabNumber != null ? " (Lab " + l.LabNumber + ")" : "")
-                })
-                .ToListAsync();
-            ViewBag.LocationId = new SelectList(locations, "Id", "Display");
+            ViewBag.AssignedToPersonId = await GetPeopleSelectList();
+            ViewBag.LocationId = await GetLocationsSelectList();
 
             return View(vm);
         }
 
         // POST: Assets/Create
+        // Only Administrators can create assets
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> Create(AssetCreateViewModel vm)
         {
             if (!ModelState.IsValid)
             {
-                var peopleAgain = await _context.People
-                    .AsNoTracking()
-                    .OrderBy(p => p.LastName).ThenBy(p => p.FirstName)
-                    .Select(p => new
-                    {
-                        p.Id,
-                        Display = (p.FirstName ?? "") +
-                                  (string.IsNullOrEmpty(p.LastName) ? "" : " " + p.LastName)
-                    })
-                    .ToListAsync();
-                ViewBag.PersonId = new SelectList(peopleAgain, "Id", "Display", vm.AssignedToPersonId);
-
-                var locs = await _context.Locations
-                    .AsNoTracking()
-                    .OrderBy(l => l.Building).ThenBy(l => l.Room)
-                    .Select(l => new
-                    {
-                        l.Id,
-                        Display = l.Building + " - " + l.Room +
-                                  (l.LabNumber != null ? " (Lab " + l.LabNumber + ")" : "")
-                    })
-                    .ToListAsync();
-                ViewBag.LocationId = new SelectList(locs, "Id", "Display", vm.LocationId);
-
+                ViewBag.AssignedToPersonId = await GetPeopleSelectList(vm.AssignedToPersonId);
+                ViewBag.LocationId = await GetLocationsSelectList(vm.LocationId);
                 return View(vm);
             }
 
-            // create Person if free-typed
-            int? personId = vm.AssignedToPersonId;
-            if (personId == null && !string.IsNullOrWhiteSpace(vm.NewPersonName))
+            try
             {
-                var person = new Person
+                // Create Person if free-typed
+                int? personId = vm.AssignedToPersonId;
+                if (personId == null && !string.IsNullOrWhiteSpace(vm.NewPersonName))
                 {
-                    FullName = vm.NewPersonName.Trim(),
-                    Email = vm.NewPersonEmail?.Trim() ?? ""
-                };
-                _context.People.Add(person);
-                await _context.SaveChangesAsync();
-                personId = person.Id;
-            }
+                    var person = new Person
+                    {
+                        FullName = vm.NewPersonName.Trim(),
+                        Email = vm.NewPersonEmail?.Trim() ?? ""
+                    };
+                    _context.People.Add(person);
+                    await _context.SaveChangesAsync();
+                    personId = person.Id;
+                }
 
-            // create Location if free-typed
-            int? locationId = vm.LocationId;
-            bool hasNewLocation =
-                   !string.IsNullOrWhiteSpace(vm.NewLocationBuilding)
-                || !string.IsNullOrWhiteSpace(vm.NewLocationRoom)
-                || !string.IsNullOrWhiteSpace(vm.NewLocationLabNumber);
+                // Create Location if free-typed
+                int? locationId = vm.LocationId;
+                bool hasNewLocation =
+                       !string.IsNullOrWhiteSpace(vm.NewLocationBuilding)
+                    || !string.IsNullOrWhiteSpace(vm.NewLocationRoom)
+                    || !string.IsNullOrWhiteSpace(vm.NewLocationLabNumber);
 
-            if (locationId == null && hasNewLocation)
-            {
-                var location = new Location
+                if (locationId == null && hasNewLocation)
                 {
-                    Building = vm.NewLocationBuilding?.Trim() ?? "",
-                    Room = vm.NewLocationRoom?.Trim() ?? "",
-                    LabNumber = string.IsNullOrWhiteSpace(vm.NewLocationLabNumber)
-                                ? null
-                                : vm.NewLocationLabNumber.Trim()
+                    var location = new Location
+                    {
+                        Building = vm.NewLocationBuilding?.Trim() ?? "",
+                        Room = vm.NewLocationRoom?.Trim() ?? "",
+                        LabNumber = string.IsNullOrWhiteSpace(vm.NewLocationLabNumber)
+                                    ? null
+                                    : vm.NewLocationLabNumber.Trim()
+                    };
+                    _context.Locations.Add(location);
+                    await _context.SaveChangesAsync();
+                    locationId = location.Id;
+                }
+
+                var asset = new Asset
+                {
+                    AssetTag = vm.AssetTag,
+                    Category = vm.Category,
+                    Model = vm.Model,
+                    SerialNumber = vm.SerialNumber,
+                    PurchaseDate = vm.PurchaseDate,
+                    PurchaseCost = vm.PurchaseCost,
+                    WarrantyEnd = vm.WarrantyEnd,
+                    Status = vm.Status,
+                    AssignedToPersonId = personId,
+                    LocationId = locationId
                 };
-                _context.Locations.Add(location);
+
+                _context.Assets.Add(asset);
                 await _context.SaveChangesAsync();
-                locationId = location.Id;
+
+                _logger.LogInformation("Asset {AssetTag} created by {User}",
+                    asset.AssetTag, User.Identity?.Name);
+
+                TempData["SuccessMessage"] = "Asset created successfully!";
+                return RedirectToAction(nameof(Index));
             }
-
-            var asset = new Asset
+            catch (Exception ex)
             {
-                AssetTag = vm.AssetTag,
-                Category = vm.Category,
-                Model = vm.Model,
-                SerialNumber = vm.SerialNumber,
-                PurchaseDate = vm.PurchaseDate,
-                PurchaseCost = vm.PurchaseCost,
-                WarrantyEnd = vm.WarrantyEnd,   // alias → mapped WarrantyExpiry
-                Status = vm.Status,
-                AssignedToPersonId = personId,
-                LocationId = locationId
-            };
+                _logger.LogError(ex, "Error creating asset");
+                ModelState.AddModelError("", "An error occurred while creating the asset.");
 
-            _context.Assets.Add(asset);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+                ViewBag.AssignedToPersonId = await GetPeopleSelectList(vm.AssignedToPersonId);
+                ViewBag.LocationId = await GetLocationsSelectList(vm.LocationId);
+                return View(vm);
+            }
         }
 
         // GET: Assets/Edit/5
+        // Admin or Developer can edit
+        [Authorize(Policy = "CanManageAssets")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -205,31 +197,17 @@ namespace ITAssetManager.Web.Controllers
             var asset = await _context.Assets.FindAsync(id);
             if (asset == null) return NotFound();
 
-            var people = await _context.People
-                .AsNoTracking()
-                .OrderBy(p => p.LastName).ThenBy(p => p.FirstName)
-                .Select(p => new
-                {
-                    p.Id,
-                    Display = (p.FirstName ?? "") +
-                              (string.IsNullOrEmpty(p.LastName) ? "" : " " + p.LastName)
-                })
-                .ToListAsync();
-            ViewBag.PersonId = new SelectList(people, "Id", "Display", asset.AssignedToPersonId);
-
-            var locations = await _context.Locations
-                .AsNoTracking()
-                .Select(l => new { l.Id, Display = l.Building + " - " + l.Room })
-                .OrderBy(l => l.Display)
-                .ToListAsync();
-            ViewBag.LocationId = new SelectList(locations, "Id", "Display", asset.LocationId);
+            ViewBag.AssignedToPersonId = await GetPeopleSelectList(asset.AssignedToPersonId);
+            ViewBag.LocationId = await GetLocationsSelectList(asset.LocationId);
 
             return View(asset);
         }
 
         // POST: Assets/Edit/5
+        // Admin or Developer can edit
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = "CanManageAssets")]
         public async Task<IActionResult> Edit(
             int id,
             [Bind("Id,AssetTag,Category,Model,SerialNumber,PurchaseDate,PurchaseCost,WarrantyEnd,Status,AssignedToPersonId,LocationId")]
@@ -243,17 +221,91 @@ namespace ITAssetManager.Web.Controllers
                 {
                     _context.Update(asset);
                     await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Asset {AssetTag} updated by {User}",
+                        asset.AssetTag, User.Identity?.Name);
+
+                    TempData["SuccessMessage"] = "Asset updated successfully!";
                     return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateConcurrencyException ex)
                 {
-                    if (!_context.Assets.Any(e => e.Id == asset.Id))
+                    if (!AssetExists(asset.Id))
+                    {
                         return NotFound();
-                    throw;
+                    }
+                    else
+                    {
+                        _logger.LogError(ex, "Concurrency error updating asset {Id}", id);
+                        ModelState.AddModelError("", "The asset was modified by another user. Please try again.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error updating asset {Id}", id);
+                    ModelState.AddModelError("", "An error occurred while updating the asset.");
                 }
             }
 
-            // repopulate on error and return the edit view
+            // Repopulate dropdowns on validation error
+            ViewBag.AssignedToPersonId = await GetPeopleSelectList(asset.AssignedToPersonId);
+            ViewBag.LocationId = await GetLocationsSelectList(asset.LocationId);
+
+            return View(asset);
+        }
+
+        // GET: Assets/Delete/5
+        // Only Administrators can delete
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var asset = await _context.Assets
+                .AsNoTracking()
+                .Include(a => a.Person)
+                .Include(a => a.Location)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (asset == null) return NotFound();
+
+            return View(asset);
+        }
+
+        // POST: Assets/Delete/5
+        // Only Administrators can delete
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            try
+            {
+                var asset = await _context.Assets.FindAsync(id);
+                if (asset != null)
+                {
+                    var assetTag = asset.AssetTag;
+                    _context.Assets.Remove(asset);
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogWarning("Asset {AssetTag} deleted by {User}",
+                        assetTag, User.Identity?.Name);
+
+                    TempData["SuccessMessage"] = "Asset deleted successfully!";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting asset {Id}", id);
+                TempData["ErrorMessage"] = "An error occurred while deleting the asset.";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Helper method to populate People dropdown
+        private async Task<SelectList> GetPeopleSelectList(int? selectedId = null)
+        {
             var people = await _context.People
                 .AsNoTracking()
                 .OrderBy(p => p.LastName).ThenBy(p => p.FirstName)
@@ -264,46 +316,25 @@ namespace ITAssetManager.Web.Controllers
                               (string.IsNullOrEmpty(p.LastName) ? "" : " " + p.LastName)
                 })
                 .ToListAsync();
-            ViewBag.PersonId = new SelectList(people, "Id", "Display", asset.AssignedToPersonId);
 
+            return new SelectList(people, "Id", "Display", selectedId);
+        }
+
+        // Helper method to populate Locations dropdown
+        private async Task<SelectList> GetLocationsSelectList(int? selectedId = null)
+        {
             var locations = await _context.Locations
                 .AsNoTracking()
-                .Select(l => new { l.Id, Display = l.Building + " - " + l.Room })
-                .OrderBy(l => l.Display)
+                .OrderBy(l => l.Building).ThenBy(l => l.Room)
+                .Select(l => new
+                {
+                    l.Id,
+                    Display = l.Building + " - " + l.Room +
+                              (l.LabNumber != null ? " (Lab " + l.LabNumber + ")" : "")
+                })
                 .ToListAsync();
-            ViewBag.LocationId = new SelectList(locations, "Id", "Display", asset.LocationId);
 
-            return View(asset);
-        }
-
-        // GET: Assets/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var asset = await _context.Assets
-                .AsNoTracking()
-                .Include(a => a.Person)    // mapped navs
-                .Include(a => a.Location)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (asset == null) return NotFound();
-
-            return View(asset);
-        }
-
-        // POST: Assets/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var asset = await _context.Assets.FindAsync(id);
-            if (asset != null)
-            {
-                _context.Assets.Remove(asset);
-                await _context.SaveChangesAsync();
-            }
-            return RedirectToAction(nameof(Index));
+            return new SelectList(locations, "Id", "Display", selectedId);
         }
 
         private bool AssetExists(int id) => _context.Assets.Any(e => e.Id == id);

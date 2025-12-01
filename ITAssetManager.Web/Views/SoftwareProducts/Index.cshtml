@@ -1,40 +1,142 @@
-﻿@model IEnumerable<ITAssetManager.Web.Models.ViewModels.SoftwareProductListVm>
+﻿@model IEnumerable<ITAssetManager.Web.Models.SoftwareProduct>
 
-<!-- Move the "New Product" button above the table -->
-<div class="mb-3">
-    <a asp-action="Create" class="btn btn-success btn-sm">+ New Product</a>
+@{
+    ViewData["Title"] = "Software Products";
+    var isAdmin = User.IsInRole("Administrator");
+    var isAdminOrDev = User.IsInRole("Administrator") || User.IsInRole("Developer");
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Software Products</h1>
+
+        @* Only Administrators can create *@
+        @if (isAdmin)
+        {
+            <a asp-action="Create" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> New Product
+            </a>
+        }
+    </div>
+
+    @* Success/Error Messages *@
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Vendor</th>
+                    <th>Version</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@(item.Name ?? "N/A")</td>
+                            <td>@(item.Vendor ?? "N/A")</td>
+                            <td>@(item.Version ?? "N/A")</td>
+                            <td class="text-nowrap">
+                                @* All users can view details *@
+                                <a asp-action="Details" asp-route-id="@item.Id"
+                                   class="btn btn-sm btn-info text-white">
+                                    Details
+                                </a>
+
+                                @* Only Admin or Developer can edit *@
+                                @if (isAdminOrDev)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.Id"
+                                       class="btn btn-sm btn-primary">
+                                        Edit
+                                    </a>
+                                }
+
+                                @* Only Administrator can delete *@
+                                @if (isAdmin)
+                                {
+                                    <button type="button" class="btn btn-sm btn-danger"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteModal-@item.Id">
+                                        Delete
+                                    </button>
+
+                                    <!-- Delete Confirmation Modal -->
+                                    <div class="modal fade" id="deleteModal-@item.Id" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-danger text-white">
+                                                    <h5 class="modal-title">
+                                                        <i class="bi bi-exclamation-triangle"></i> Confirm Delete
+                                                    </h5>
+                                                    <button type="button" class="btn-close btn-close-white"
+                                                            data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Are you sure you want to delete <strong>@item.Name</strong>?</p>
+                                                    <div class="alert alert-warning">
+                                                        <i class="bi bi-exclamation-triangle"></i>
+                                                        This action cannot be undone!
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                            data-bs-dismiss="modal">
+                                                        Cancel
+                                                    </button>
+                                                    <form asp-action="Delete" asp-route-id="@item.Id"
+                                                          method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-danger">
+                                                            <i class="bi bi-trash"></i> Delete
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">
+                            No software products found.
+                            @if (isAdmin)
+                            {
+                                <a asp-action="Create" class="ms-2">Create your first product</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Vendor</th>
-            <th>Version</th>
-            <th>Licenses</th>        @* was LicensesCount *@
-            <th>Total Seats</th>
-            <th>In Use</th>          @* was SeatsInUse *@
-            <th>Next Expiry</th>
-            <th>Actions</th>         @* Added header for action buttons *@
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.Name</td>
-                <td>@item.Vendor</td>
-                <td>@item.Version</td>
-                <td>@item.Licenses</td>
-                <td>@item.TotalSeats</td>
-                <td>@item.InUse</td>
-                <td>@(item.NextExpiry.HasValue? item.NextExpiry.Value.ToString("yyyy-MM-dd") : "-")</td>
-                <td>
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Details</a>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Delete</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+@section Scripts {
+    <script>
+        setTimeout(function() { $('.alert').fadeOut('slow'); }, 3000);
+    </script>
+}

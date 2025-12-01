@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using ITAssetManager.Web.Models;
 using System.Security.Claims;
 
 namespace ITAssetManager.Web.Services
@@ -11,9 +11,9 @@ namespace ITAssetManager.Web.Services
         /// <summary>
         /// Generates a JWT token for the specified user
         /// </summary>
-        /// <param name="user">The Identity user to generate a token for</param>
+        /// <param name="user">The ApplicationUser to generate a token for</param>
         /// <returns>A JWT token string</returns>
-        Task<string> GenerateTokenAsync(IdentityUser user);
+        Task<string> GenerateTokenAsync(ApplicationUser user);
 
         /// <summary>
         /// Validates a JWT token and returns the claims principal

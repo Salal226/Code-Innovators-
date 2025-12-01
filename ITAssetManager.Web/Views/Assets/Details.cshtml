@@ -1,70 +1,89 @@
 ﻿@model ITAssetManager.Web.Models.Asset
-
 @{
     ViewData["Title"] = "Details";
+    var isAdminOrDev = User?.IsInRole("Administrator") == true || User?.IsInRole("Developer") == true;
+    var isStaff = User?.IsInRole("Staff") == true;
 }
 
 <h1>Details</h1>
+
+@* Info message for Staff users *@
+@if (isStaff)
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Financial information is restricted for your role.
+    </div>
+}
 
 <div>
     <h4>Asset</h4>
     <hr />
     <dl class="row">
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.AssetTag)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.AssetTag)
         </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Category)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Category)
         </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Model)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Model)
         </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.SerialNumber)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.SerialNumber)
         </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.PurchaseDate)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.PurchaseDate)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PurchaseCost)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PurchaseCost)
-        </dd>
-       @*  <dt class = "col-sm-2">
+
+        @* Only show Purchase Cost to Admin and Developer *@
+        @if (isAdminOrDev)
+        {
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.PurchaseCost)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.PurchaseCost)
+            </dd>
+        }
+
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.WarrantyEnd)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.WarrantyEnd)
-        </dd> *@
-        <dt class = "col-sm-2">
+        </dd>
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Status)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Status)
         </dd>
-        <dt>Location</dt>
-        <dd>@Model.Location?.Building - @Model.Location?.Room</dd>
-        <dt>Assigned To</dt>
-        <dd>@Model.AssignedToPerson?.FullName</dd>
+        <dt class="col-sm-2">Location</dt>
+        <dd class="col-sm-10">@(Model?.Location != null ? $"{Model.Location.Building} - {Model.Location.Room}" : "N/A")</dd>
+        <dt class="col-sm-2">Assigned To</dt>
+        <dd class="col-sm-10">@(Model?.AssignedToPerson?.FullName ?? "Unassigned")</dd>
     </dl>
 </div>
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
+    @if (isAdminOrDev)
+    {
+        <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a>
+        <text> | </text>
+    }
     <a asp-action="Index">Back to List</a>
 </div>

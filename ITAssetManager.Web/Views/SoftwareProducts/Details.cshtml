@@ -1,97 +1,177 @@
 ﻿@model ITAssetManager.Web.Models.SoftwareProduct
 @{
-    ViewData["Title"] = "Software Product Details";
+    ViewData["Title"] = "Product Details";
 }
 
-<h2 class="mb-3">Software Product Details</h2>
-
-<div class="card shadow-sm">
-    <div class="card-body">
-        <dl class="row">
-            <dt class="col-sm-3">Name</dt>
-            <dd class="col-sm-9">@Model.Name</dd>
-
-            <dt class="col-sm-3">Vendor</dt>
-            <dd class="col-sm-9">@(Model.Vendor ?? "N/A")</dd>
-
-            <dt class="col-sm-3">Version</dt>
-            <dd class="col-sm-9">@(Model.Version ?? "N/A")</dd>
-
-            <dt class="col-sm-3">Unit Cost</dt>
-            <dd class="col-sm-9">@(Model.UnitCost?.ToString("C") ?? "N/A")</dd>
-
-            <dt class="col-sm-3">Seats</dt>
-            <dd class="col-sm-9">@Model.SeatCount</dd>
-
-            <dt class="col-sm-3">Seats In Use</dt>
-            <dd class="col-sm-9">@Model.SeatsInUse</dd>
-
-            <dt class="col-sm-3">License Expiry</dt>
-            <dd class="col-sm-9">
-                @if (Model.LicenseExpiry.HasValue)
-                {
-                    <span class="@(Model.LicenseExpiry.Value < DateTime.Today ? "text-danger" : Model.LicenseExpiry.Value <= DateTime.Today.AddDays(30) ? "text-warning" : "text-success")">
-                        @Model.LicenseExpiry.Value.ToString("yyyy-MM-dd")
-                    </span>
-                }
-                else
-                {
-                    <span class="text-muted">N/A</span>
-                }
-            </dd>
-        </dl>
-
-        <div class="mt-3">
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
-            <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>@Model.Name</h2>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
         </div>
     </div>
-</div>
 
-@if (Model.Assignments != null && Model.Assignments.Any())
-{
-    <div class="card mt-4">
-        <div class="card-header">
-            <h4 class="mb-0">Recent Assignments (@Model.Assignments.Count() total)</h4>
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5><i class="bi bi-info-circle"></i> Product Information</h5>
         </div>
         <div class="card-body">
-            <table class="table table-sm">
-                <thead>
-                    <tr>
-                        <th>Assignment Date</th>
-                        <th>Person</th>
-                        <th>Asset</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var a in Model.Assignments.OrderByDescending(x => x.AssignedOn).Take(10))
-                    {
-                        <tr>
-                            <td>@(a.AssignedOn?.ToString("yyyy-MM-dd") ?? "N/A")</td>
-                            <td>@(a.Person?.FullName ?? "N/A")</td>
-                            <td>@(a.Asset?.AssetTag ?? "N/A")</td>
-                            <td>
-                                <span class="badge @(a.IsActive ? "bg-success" : "bg-secondary")">
-                                    @(a.IsActive ? "Active" : "Inactive")
-                                </span>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Product Name:</dt>
+                        <dd class="col-sm-8"><strong>@Model.Name</strong></dd>
 
-            @if (Model.Assignments.Count() > 10)
+                        <dt class="col-sm-4">Vendor:</dt>
+                        <dd class="col-sm-8">@(Model.Vendor ?? "N/A")</dd>
+
+                        <dt class="col-sm-4">Version:</dt>
+                        <dd class="col-sm-8">@(Model.Version ?? "N/A")</dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Publisher:</dt>
+                        <dd class="col-sm-8">@(Model.Publisher ?? "N/A")</dd>
+
+                        <dt class="col-sm-4">Category:</dt>
+                        <dd class="col-sm-8">
+                            @if (!string.IsNullOrEmpty(Model.Category))
+                            {
+                                <span class="badge bg-secondary">@Model.Category</span>
+                            }
+                            else
+                            {
+                                <span>N/A</span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Description))
             {
-                <p class="text-muted mt-2">Showing 10 most recent assignments of @Model.Assignments.Count() total.</p>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <strong>Description:</strong>
+                        <p>@Model.Description</p>
+                    </div>
+                </div>
             }
         </div>
     </div>
-}
-else
-{
-    <div class="alert alert-info mt-4">
-        <h5>No Assignments</h5>
-        <p class="mb-0">This software product has no license assignments yet.</p>
+
+    <!-- License Summary -->
+    <div class="card mt-4">
+        <div class="card-header bg-success text-white">
+            <h5><i class="bi bi-key"></i> License Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <h4 class="text-primary">@Model.TotalLicenses</h4>
+                    <p class="text-muted">Total Licenses</p>
+                </div>
+                <div class="col-md-3">
+                    <h4 class="text-info">@Model.TotalSeatsPurchased</h4>
+                    <p class="text-muted">Seats Purchased</p>
+                </div>
+                <div class="col-md-3">
+                    <h4 class="text-warning">@Model.TotalSeatsAssigned</h4>
+                    <p class="text-muted">Seats Assigned</p>
+                </div>
+                <div class="col-md-3">
+                    <h4 class="@(Model.SeatsAvailable > 0 ? "text-success" : "text-danger")">
+                        @Model.SeatsAvailable
+                    </h4>
+                    <p class="text-muted">Seats Available</p>
+                </div>
+            </div>
+
+            @if (Model.NextExpiryDate.HasValue)
+            {
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-calendar-x"></i>
+                    <strong>Next License Expiry:</strong> @Model.NextExpiryDate.Value.ToString("yyyy-MM-dd")
+                </div>
+            }
+
+            <div class="mt-3">
+                <a asp-controller="SoftwareLicenses" asp-action="Index" class="btn btn-outline-primary">
+                    <i class="bi bi-list"></i> View All Licenses
+                </a>
+                <a asp-controller="SoftwareLicenses" asp-action="Create" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> Add License for This Product
+                </a>
+            </div>
+        </div>
     </div>
-}
+
+    <!-- Associated Licenses Table -->
+    @if (Model.Licenses != null && Model.Licenses.Any())
+    {
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5><i class="bi bi-list-ul"></i> Associated Licenses</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>License Key</th>
+                                <th>Purchase Date</th>
+                                <th>Expiry Date</th>
+                                <th>Seats</th>
+                                <th>Cost</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var license in Model.Licenses)
+                            {
+                                <tr>
+                                    <td><code>@license.LicenseKey</code></td>
+                                    <td>@(license.PurchaseDate?.ToString("yyyy-MM-dd") ?? "N/A")</td>
+                                    <td>
+                                        @if (license.ExpiryDate.HasValue)
+                                        {
+                                            <span class="@(license.IsExpired ? "text-danger" : license.IsExpiringSoon ? "text-warning" : "")">
+                                                @license.ExpiryDate.Value.ToString("yyyy-MM-dd")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span>N/A</span>
+                                        }
+                                    </td>
+                                    <td>@license.SeatsPurchased / @license.SeatsAssigned assigned</td>
+                                    <td>@(license.Cost?.ToString("C") ?? "N/A")</td>
+                                    <td>
+                                        @if (license.IsExpired)
+                                        {
+                                            <span class="badge bg-danger">Expired</span>
+                                        }
+                                        else if (license.IsExpiringSoon)
+                                        {
+                                            <span class="badge bg-warning">Expiring Soon</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Active</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

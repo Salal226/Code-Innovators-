@@ -23,6 +23,11 @@
                 <span asp-validation-for="Room" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="LabNumber" class="control-label">Lab Number</label>
+                <input asp-for="LabNumber" class="form-control" placeholder="e.g., LAB-101" />
+                <span asp-validation-for="LabNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>
         </form>

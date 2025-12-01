@@ -1,0 +1,178 @@
+﻿@model ITAssetManager.Web.Models.SoftwareLicense
+@{
+    ViewData["Title"] = "License Details";
+}
+
+<div class="container my-4">
+    <div class="card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Software License Details</h2>
+            <div>
+                @if (Model.IsExpired)
+                {
+                    <span class="badge bg-danger fs-6">Expired</span>
+                }
+                else if (Model.IsExpiringSoon)
+                {
+                    <span class="badge bg-warning text-dark fs-6">Expiring Soon</span>
+                }
+                else
+                {
+                    <span class="badge bg-success fs-6">Active</span>
+                }
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Software Product -->
+            <div class="col-md-6">
+                <div class="detail-group">
+                    <label class="text-muted small">Software Product</label>
+                    <h5 class="mb-0">@(Model.Product?.Name ?? "N/A")</h5>
+                </div>
+            </div>
+
+            <!-- License Key -->
+            <div class="col-md-6">
+                <div class="detail-group">
+                    <label class="text-muted small">License Key</label>
+                    @if (!string.IsNullOrEmpty(Model.LicenseKey))
+                    {
+                        <h5 class="mb-0 font-monospace">@Model.LicenseKey</h5>
+                    }
+                    else
+                    {
+                        <h5 class="mb-0 text-muted">N/A</h5>
+                    }
+                </div>
+            </div>
+
+            <!-- Purchase Date -->
+            <div class="col-md-6">
+                <div class="detail-group">
+                    <label class="text-muted small">Purchase Date</label>
+                    <h5 class="mb-0">@(Model.PurchaseDate?.ToString("MMMM dd, yyyy") ?? "N/A")</h5>
+                </div>
+            </div>
+
+            <!-- Expiry Date -->
+            <div class="col-md-6">
+                <div class="detail-group">
+                    <label class="text-muted small">Expiry Date</label>
+                    @if (Model.ExpiryDate.HasValue)
+                    {
+                        <h5 class="mb-0 @(Model.IsExpired ? "text-danger" : Model.IsExpiringSoon ? "text-warning" : "text-success")">
+                            @Model.ExpiryDate.Value.ToString("MMMM dd, yyyy")
+                            @if (Model.IsExpired)
+                            {
+                                <small>(Expired)</small>
+                            }
+                            else if (Model.IsExpiringSoon)
+                            {
+                                var daysRemaining = (Model.ExpiryDate.Value - DateTime.Now).Days;
+                                <small>(@daysRemaining days remaining)</small>
+                            }
+                        </h5>
+                    }
+                    else
+                    {
+                        <h5 class="mb-0 text-muted">N/A</h5>
+                    }
+                </div>
+            </div>
+
+            <!-- Seats Information -->
+            <div class="col-md-6">
+                <div class="detail-group">
+                    <label class="text-muted small">Seats Purchased</label>
+                    <h5 class="mb-0">@(Model.SeatsPurchased?.ToString() ?? "N/A")</h5>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="detail-group">
+                    <label class="text-muted small">Seats Assigned</label>
+                    <h5 class="mb-0">
+                        @(Model.SeatsAssigned?.ToString() ?? "0")
+                        @if (Model.SeatsPurchased.HasValue && Model.SeatsAssigned.HasValue)
+                        {
+                            var available = Model.SeatsPurchased.Value - Model.SeatsAssigned.Value;
+                            <small class="text-muted">(@available available)</small>
+                        }
+                    </h5>
+                </div>
+            </div>
+
+            <!-- Cost -->
+            <div class="col-md-6">
+                <div class="detail-group">
+                    <label class="text-muted small">Cost</label>
+                    <h5 class="mb-0">@(Model.Cost?.ToString("C") ?? "N/A")</h5>
+                </div>
+            </div>
+
+            <!-- Vendor -->
+            <div class="col-md-6">
+                <div class="detail-group">
+                    <label class="text-muted small">Vendor</label>
+                    <h5 class="mb-0">@(Model.Vendor ?? "N/A")</h5>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            @if (!string.IsNullOrEmpty(Model.Notes))
+            {
+                <div class="col-12">
+                    <div class="detail-group">
+                        <label class="text-muted small">Notes</label>
+                        <div class="border rounded p-3 bg-light">
+                            @Model.Notes
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-4 pt-3 border-top">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary ms-2">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger ms-2">
+                <i class="bi bi-trash"></i> Delete
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .detail-group {
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+        .detail-group label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        .detail-group h5 {
+            color: var(--ci-navy);
+        }
+
+    .font-monospace {
+        font-family: 'Courier New', monospace;
+        background: #fff;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        display: inline-block;
+    }
+</style>
