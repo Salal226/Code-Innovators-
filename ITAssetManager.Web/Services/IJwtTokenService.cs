@@ -1,5 +1,6 @@
 ﻿using ITAssetManager.Web.Models;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 
 namespace ITAssetManager.Web.Services
 {
